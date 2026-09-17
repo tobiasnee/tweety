@@ -1,0 +1,7 @@
+@if (message()) {
+  <p>Antwort vom Backend: <strong>{{ message() }}</strong></p>
+} @else if (error()) {
+  <p>{{ error() }}</p>
+} @else {
+  <p>Lade …</p>
+}
