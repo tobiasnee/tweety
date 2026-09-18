@@ -1,0 +1,93 @@
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  height: var(--topbar-height);
+  padding: 0 1.5rem;
+  background: var(--canary);
+  border-bottom: 3px solid var(--canary-deep);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.brand-mark {
+  font-size: 1.6rem;
+}
+
+.brand-name {
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.shell {
+  display: flex;
+  align-items: stretch;
+  min-height: calc(100vh - var(--topbar-height));
+}
+
+.sidebar {
+  position: sticky;
+  top: var(--topbar-height);
+  align-self: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: var(--sidebar-width);
+  height: calc(100vh - var(--topbar-height));
+  padding: 1.25rem 0.75rem;
+  background: var(--bark);
+}
+
+.sidebar a {
+  padding: 0.6rem 0.9rem;
+  border-radius: 0.6rem;
+  color: #f3e7d5;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.sidebar a:hover {
+  background: rgba(255, 204, 26, 0.15);
+}
+
+.sidebar a.active {
+  background: var(--canary);
+  color: var(--ink);
+}
+
+.sidebar a:focus-visible {
+  outline: 2px solid var(--canary);
+  outline-offset: 2px;
+}
+
+.content {
+  flex: 1;
+  padding: 2rem 2.5rem;
+  max-width: 60rem;
+}
+
+@media (max-width: 40rem) {
+  .shell {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    position: static;
+    flex-direction: row;
+    width: 100%;
+    height: auto;
+    overflow-x: auto;
+  }
+
+  .content {
+    padding: 1.5rem 1.25rem;
+  }
+}

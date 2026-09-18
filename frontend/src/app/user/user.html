@@ -1,1 +1,63 @@
-<p>user works!</p>
+<h2>Register user</h2>
+
+<form [formGroup]="form" (ngSubmit)="submit()">
+
+  <div class="field">
+    <label for="username">Username</label>
+    <input id="username" type="text" formControlName="username" />
+
+    @if (form.controls.username.touched && form.controls.username.invalid) {
+      <p class="error">
+        @if (form.controls.username.hasError('required')) {
+          Username is required.
+        } @else if (form.controls.username.hasError('minlength')) {
+          Username must be at least 3 characters.
+        }
+      </p>
+    }
+  </div>
+    <div class="field">
+    <label for="email">E-Mail</label>
+    <input id="email" type="email" formControlName="email" />
+
+    @if (form.controls.email.touched && form.controls.email.invalid) {
+      <p class="error">
+        @if (form.controls.email.hasError('required')) {
+          E-Mail is required.
+        } @else if (form.controls.email.hasError('email')) {
+          E-Mail must be a valid email address.
+        }
+      </p>
+    }
+  </div>
+
+  <div class="field">
+    <label for="displayName">Display Name</label>
+    <input id="displayName" type="text" formControlName="displayName" />
+
+    @if (form.controls.displayName.touched && form.controls.displayName.invalid) {
+      <p class="error">
+        @if (form.controls.displayName.hasError('required')) {
+          Display Name is required.
+        } @else if (form.controls.displayName.hasError('maxlength')) {
+          Display Name must be at most 100 characters.
+        }
+      </p>
+    }
+  </div>
+
+  <button type="submit" [disabled]="saving()">
+    {{ saving() ? 'Saving …' : 'Create user' }}
+  </button>
+
+  @if (createdUser(); as user) {
+  <p class="success">
+    User "{{ user.username }}" was created with ID {{ user.id }}.
+  </p>
+}
+
+@if (errorMessage(); as message) {
+  <p class="error">{{ message }}</p>
+}
+
+</form>
