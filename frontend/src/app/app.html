@@ -1,5 +1,17 @@
-<h1>Tweety</h1>
-<nav>
-  <a routerLink="/hello">Hello</a>
-</nav>
-<router-outlet></router-outlet>
+<header class="topbar">
+  <a class="brand" routerLink="/hello">
+    <span class="brand-mark">🐦</span>
+    <span class="brand-name">Tweety</span>
+  </a>
+</header>
+
+<div class="shell">
+  <nav class="sidebar">
+    <a routerLink="/hello" routerLinkActive="active">Test Hello</a>
+    <a routerLink="/user" routerLinkActive="active">Create a new user</a>
+  </nav>
+
+  <main class="content">
+    <router-outlet />
+  </main>
+</div>

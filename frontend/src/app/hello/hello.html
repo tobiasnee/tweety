@@ -1,7 +1,5 @@
-@if (message()) {
-  <p>Antwort vom Backend: <strong>{{ message() }}</strong></p>
-} @else if (error()) {
-  <p>{{ error() }}</p>
+@if (message$ | async; as message) {
+  <p>Antwort vom Backend: {{ message }}</p>
 } @else {
   <p>Lade …</p>
 }
