@@ -4,6 +4,7 @@ import de.tobiasnee.backend.dto.CreateUserRequest;
 import de.tobiasnee.backend.dto.UserResponse;
 import de.tobiasnee.backend.entity.UserEntity;
 import de.tobiasnee.backend.exception.DuplicateUserException;
+import de.tobiasnee.backend.exception.UserNotFoundException;
 import de.tobiasnee.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +32,13 @@ public class UserService {
         return toResponse(saved);
     }
 
+    public UserResponse getUserById(Long id) {
+        UserEntity entity = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("Benutzer mit ID " + id + " wurde nicht gefunden."));
+
+        return toResponse(entity);
+    }
+
     private UserEntity toEntity(CreateUserRequest request) {
         UserEntity entity = new UserEntity();
         entity.setUsername(request.username());
@@ -44,7 +52,8 @@ public class UserService {
                 entity.getId(),
                 entity.getUsername(),
                 entity.getEmail(),
-                entity.getDisplayName()
+                entity.getDisplayName(),
+                entity.getCreatedAt()
         );
     }
 }
