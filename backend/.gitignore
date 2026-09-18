@@ -32,4 +32,5 @@ build/
 .vscode/
 
 ### H2 Datenbank ###
+.idea/
 data/
