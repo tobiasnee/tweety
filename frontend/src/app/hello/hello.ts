@@ -1,22 +1,19 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
-  imports: [],
+  imports: [AsyncPipe],
   selector: 'app-hello',
   styleUrl: './hello.css',
   templateUrl: './hello.html',
 })
-export class Hello {
-  private http = inject(HttpClient);
+export class Hello implements OnInit {
+  private http = inject(HttpClient)
+  message$!: Observable<string>;
 
-  message = signal<string | null>(null);
-  error = signal<string | null>(null);
-
-  constructor() {
-    this.http.get('/api/hello', { responseType: 'text' }).subscribe({
-      next: (text) => this.message.set(text),
-      error: () => this.error.set('Fehler beim Erreichen der API'),
-    });
+  ngOnInit(): void {
+    this.message$ = this.http.get('/api/hello', { responseType: 'text' });
   }
 }
