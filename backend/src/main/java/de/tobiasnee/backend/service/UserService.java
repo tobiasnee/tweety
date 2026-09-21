@@ -40,11 +40,7 @@ public class UserService {
     }
 
     private UserEntity toEntity(CreateUserRequest request) {
-        UserEntity entity = new UserEntity();
-        entity.setUsername(request.username());
-        entity.setEmail(request.email());
-        entity.setDisplayName(request.displayName());
-        return entity;
+        return new UserEntity(request.username(), request.email(), request.displayName());
     }
 
     private UserResponse toResponse(UserEntity entity) {

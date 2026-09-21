@@ -1,9 +1,9 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Service } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { CreateUserRequest, UserResponse } from './user.model';
 
-@Injectable({ providedIn: 'root' })
+@Service()
 export class UserApi {
   private http = inject(HttpClient);
 
