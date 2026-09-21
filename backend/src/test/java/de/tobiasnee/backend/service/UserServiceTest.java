@@ -11,6 +11,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -64,6 +65,20 @@ class UserServiceTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(entity));
 
         assertThat(userService.getUserById(1L).username()).isEqualTo("Max");
+    }
+
+    @Test
+    void getAllUsers_returnsAllUsers() {
+        when(userRepository.findAll()).thenReturn(List.of(
+                new UserEntity("Max", "max@mustermann.com", "Mustermann"),
+                new UserEntity("Erika", "erika@mustermann.com", "Musterfrau")
+        ));
+
+        var result = userService.getAllUsers();
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).username()).isEqualTo("Max");
+        assertThat(result.get(1).username()).isEqualTo("Erika");
     }
 
     @Test

@@ -4,6 +4,7 @@ import de.tobiasnee.backend.dto.CreateUserRequest;
 import de.tobiasnee.backend.dto.UserResponse;
 import de.tobiasnee.backend.service.UserService;
 import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,4 +32,7 @@ public class UserController {
     public UserResponse getUserById(@PathVariable Long id) {
         return userService.getUserById(id);
     }
+
+    @GetMapping
+    public List<UserResponse> getAllUsers() { return userService.getAllUsers(); }
 }

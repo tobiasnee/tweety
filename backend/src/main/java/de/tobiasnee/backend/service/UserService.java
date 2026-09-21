@@ -8,6 +8,8 @@ import de.tobiasnee.backend.exception.UserNotFoundException;
 import de.tobiasnee.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class UserService {
 
@@ -37,6 +39,12 @@ public class UserService {
                 .orElseThrow(() -> new UserNotFoundException("Benutzer mit ID " + id + " wurde nicht gefunden."));
 
         return toResponse(entity);
+    }
+
+    public List<UserResponse> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     private UserEntity toEntity(CreateUserRequest request) {
