@@ -1,0 +1,97 @@
+h2 {
+  margin-bottom: 1.25rem;
+}
+
+.user-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 32rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.user-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border: 2px solid #efe6d2;
+  border-radius: 0.75rem;
+  background: #fff;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.user-card:hover {
+  border-color: var(--canary);
+  transform: translateX(3px);
+}
+
+.avatar {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: var(--canary);
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.info {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.info strong,
+.handle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.handle {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.user-card button {
+  flex-shrink: 0;
+  padding: 0.45rem 1.1rem;
+  border: none;
+  border-radius: 999px;
+  background: var(--canary);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.user-card button:hover {
+  background: var(--canary-deep);
+}
+
+.user-card button:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.empty {
+  padding: 1.25rem;
+  border: 2px dashed #e3d9c6;
+  border-radius: 0.75rem;
+  color: var(--muted);
+}
+
+.empty a {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.error {
+  color: #b3261e;
+}

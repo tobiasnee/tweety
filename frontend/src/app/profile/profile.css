@@ -1,0 +1,48 @@
+h2 {
+  margin-bottom: 1.25rem;
+}
+
+.profile {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0;
+  max-width: 32rem;
+  margin: 0;
+  overflow: hidden;
+  border: 2px solid #efe6d2;
+  border-top: 6px solid var(--canary);
+  border-radius: 0.75rem;
+  background: #fff;
+}
+
+.profile dt,
+.profile dd {
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid #f3ecdd;
+}
+
+.profile dt {
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.profile dd {
+  margin: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.profile dt:last-of-type,
+.profile dd:last-of-type {
+  border-bottom: none;
+}
+
+.error {
+  max-width: 32rem;
+  padding: 1rem 1.25rem;
+  border: 2px dashed #e3d9c6;
+  border-radius: 0.75rem;
+  color: #b3261e;
+  font-weight: 600;
+}

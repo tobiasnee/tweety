@@ -1,0 +1,29 @@
+@if (user(); as me) {
+  <div class="timeline-layout">
+
+    <section class="main-column">
+      <div class="compose">
+        <h2>What's happening?</h2>
+        <textarea rows="3" maxlength="140" placeholder="Tweeting is coming soon …" disabled></textarea>
+        <div class="compose-footer">
+          <span class="counter">140</span>
+          <button type="button" disabled>Tweet</button>
+        </div>
+      </div>
+
+      <h3 class="section-title">Timeline</h3>
+      <p class="empty">No tweets yet. Once tweeting is available, they will show up here.</p>
+    </section>
+
+    <aside class="profile-card">
+      <div class="avatar">{{ me.displayName.charAt(0) }}</div>
+      <strong class="name">{{ me.displayName }}</strong>
+      <span class="handle">&#64;{{ me.username }}</span>
+      <span class="since">Joined {{ me.createdAt | date: 'MMMM yyyy' }}</span>
+      <a [routerLink]="['/users', me.id]">View profile</a>
+    </aside>
+
+  </div>
+} @else {
+  <p>No user selected. <a routerLink="/login">Choose a user</a> to continue.</p>
+}
