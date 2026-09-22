@@ -1,12 +1,19 @@
-import { Component, signal } from '@angular/core';
-import { RouterLink, RouterOutlet } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { CurrentUser } from './auth/current-user';
 
 @Component({
-  imports: [RouterOutlet, RouterLink],
   selector: 'app-root',
-  styleUrl: './app.css',
+  imports: [RouterOutlet, RouterLink, RouterLinkActive],
   templateUrl: './app.html',
+  styleUrl: './app.css',
 })
 export class App {
-  protected readonly title = signal('frontend');
+  private router = inject(Router);
+  protected currentUser = inject(CurrentUser);
+
+  logout(): void {
+    this.currentUser.logout();
+    this.router.navigate(['/login']);
+  }
 }

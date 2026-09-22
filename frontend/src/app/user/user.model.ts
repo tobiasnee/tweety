@@ -9,4 +9,5 @@ export interface UserResponse {
   username: string;
   email: string;
   displayName: string;
+  createdAt: string;
 }

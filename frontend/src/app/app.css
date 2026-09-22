@@ -91,3 +91,50 @@
     padding: 1.5rem 1.25rem;
   }
 }
+.session {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-left: auto;
+}
+
+.session-user {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.session-user:hover span:last-child {
+  text-decoration: underline;
+}
+
+.session-avatar {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--canary);
+  font-weight: 800;
+}
+
+.session-button {
+  padding: 0.35rem 1rem;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.session-button:hover {
+  background: var(--ink);
+  color: var(--canary);
+}

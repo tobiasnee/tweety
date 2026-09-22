@@ -1,0 +1,24 @@
+<h2>Who's tweeting?</h2>
+
+@if (users.isLoading()) {
+  <p>Loading …</p>
+} @else if (users.error()) {
+  <p class="error">Could not load users.</p>
+} @else {
+  <ul class="user-list">
+    @for (user of users.value(); track user.id) {
+      <li class="user-card">
+        <div class="avatar">{{ user.displayName.charAt(0) }}</div>
+        <div class="info">
+          <strong>{{ user.displayName }}</strong>
+          <span class="handle">&#64;{{ user.username }}</span>
+        </div>
+        <button type="button" (click)="select(user)">Continue</button>
+      </li>
+    } @empty {
+      <li class="empty">
+        No users yet. <a routerLink="/user">Create the first one</a>.
+      </li>
+    }
+  </ul>
+}

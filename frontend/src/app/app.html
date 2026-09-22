@@ -1,14 +1,28 @@
 <header class="topbar">
-  <a class="brand" routerLink="/hello">
+  <a class="brand" routerLink="/timeline">
     <span class="brand-mark">🐦</span>
     <span class="brand-name">Tweety</span>
   </a>
+
+  <div class="session">
+    @if (currentUser.user(); as me) {
+      <a class="session-user" [routerLink]="['/users', me.id]">
+        <span class="session-avatar">{{ me.displayName.charAt(0) }}</span>
+        <span>&#64;{{ me.username }}</span>
+      </a>
+      <button type="button" class="session-button" (click)="logout()">Log out</button>
+    } @else {
+      <a class="session-button" routerLink="/login">Log in</a>
+    }
+  </div>
 </header>
 
 <div class="shell">
   <nav class="sidebar">
+    <a routerLink="/timeline" routerLinkActive="active">Timeline</a>
     <a routerLink="/hello" routerLinkActive="active">Test Hello</a>
     <a routerLink="/user" routerLinkActive="active">Create a new user</a>
+    <a [routerLink]="['/users', currentUser.user()?.id]" routerLinkActive="active">Profile</a>
   </nav>
 
   <main class="content">

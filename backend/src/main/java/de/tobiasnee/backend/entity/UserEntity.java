@@ -1,15 +1,17 @@
 package de.tobiasnee.backend.entity;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Table(name="users")
+import java.time.Instant;
+import java.util.Objects;
+
 @Entity
+@Table(name = "users")
 @Getter
-@Setter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class UserEntity {
 
     @Id
@@ -24,4 +26,18 @@ public class UserEntity {
 
     @Column(nullable = false)
     private String displayName;
+
+    @Column(nullable = false, updatable = false)
+    private Instant createdAt;
+
+    public UserEntity(String username, String email, String displayName) {
+        this.username = Objects.requireNonNull(username, "username must not be null");
+        this.email = Objects.requireNonNull(email, "email must not be null");
+        this.displayName = Objects.requireNonNull(displayName, "displayName must not be null");
+    }
+
+    @PrePersist
+    void onCreate() {
+        this.createdAt = Instant.now();
+    }
 }

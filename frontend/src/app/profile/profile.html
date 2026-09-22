@@ -1,0 +1,21 @@
+<h2>Profile</h2>
+
+@if (user.isLoading()) {
+  <p>Loading …</p>
+} @else if (errorMessage(); as message) {
+  <p class="error">{{ message }}</p>
+} @else if (user.hasValue()) {
+  <dl class="profile">
+    <dt>Username</dt>
+    <dd>{{ user.value()!.username }}</dd>
+
+    <dt>Display name</dt>
+    <dd>{{ user.value()!.displayName }}</dd>
+
+    <dt>Email</dt>
+    <dd>{{ user.value()!.email }}</dd>
+
+    <dt>Registered</dt>
+    <dd>{{ user.value()!.createdAt | date: 'dd.MM.yyyy HH:mm' }}</dd>
+  </dl>
+}
