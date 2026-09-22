@@ -1,6 +1,7 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { CurrentUser } from '../auth/current-user';
@@ -28,6 +29,9 @@ export class Timeline implements OnInit {
   protected remaining = computed(() => this.maxLength - this.textValue().length);
 
   protected tweets = signal<TweetResponse[]>([]);
+  protected loading = signal(false);
+  protected tweetCount = computed(() => this.tweets().length);
+
   protected submitting = signal(false);
   protected errorMessage = signal<string | null>(null);
 
@@ -36,9 +40,13 @@ export class Timeline implements OnInit {
   }
 
   protected loadTweets(): void {
+    this.loading.set(true);
     this.tweetApi.getTweets().subscribe({
-      next: (tweets) => this.tweets.set(tweets),
-      error: (err) => this.errorMessage.set('Failed to load tweets'),
+      next: (tweets) => {
+        this.tweets.set(tweets);
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false),
     });
   }
 
@@ -57,13 +65,13 @@ export class Timeline implements OnInit {
         this.submitting.set(false);
         this.loadTweets();
       },
-      error: (err) => {
+      error: (err: HttpErrorResponse) => {
         if (err.status === 400) {
-          this.errorMessage.set('Invalid text');
+          this.errorMessage.set('Your tweet is not valid.');
         } else if (err.status === 404) {
-          this.errorMessage.set('User not found');
+          this.errorMessage.set('Your user no longer exists. Please log in again.');
         } else {
-          this.errorMessage.set('Failed to create tweet');
+          this.errorMessage.set('Could not post your tweet.');
         }
         this.submitting.set(false);
       },

@@ -23,8 +23,11 @@
           <p class="error">{{ message }}</p>
         }
       </div>
-      <h3 class="section-title">Timeline</h3>
+    <h3 class="section-title">Timeline ({{ tweetCount() }})</h3>
 
+    @if (loading() && tweets().length === 0) {
+      <p class="empty">Loading tweets …</p>
+    } @else {
       <ul class="tweet-list">
         @for (tweet of tweets(); track tweet.id) {
           <li class="tweet">
@@ -36,12 +39,14 @@
                 <span class="tweet-date">· {{ tweet.createdAt | date: 'dd.MM.yyyy HH:mm' }}</span>
               </div>
               <p class="tweet-text">{{ tweet.text }}</p>
+              <span class="tweet-likes">♥ {{ tweet.likeCount }}</span>
             </div>
           </li>
         } @empty {
           <li class="empty">No tweets yet. Be the first to post something!</li>
         }
       </ul>
+    }
     </section>
 
     <aside class="profile-card">

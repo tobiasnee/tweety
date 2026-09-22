@@ -10,4 +10,5 @@ export interface TweetResponse {
   text: string;
   author: UserResponse;
   createdAt: string;
+  likeCount: number;
 }

@@ -180,3 +180,10 @@
 .tweet-list .empty {
   padding: 1.5rem 0;
 }
+
+.tweet-likes {
+  display: inline-block;
+  margin-top: 0.35rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
