@@ -6,5 +6,6 @@ public record TweetResponse(
         Long id,
         String text,
         UserResponse author,
-        Instant createdAt
+        Instant createdAt,
+        Integer likeCount
 ) {}

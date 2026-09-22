@@ -60,7 +60,8 @@ public class TweetService {
                         author.getDisplayName(),
                         author.getCreatedAt()
                 ),
-                tweet.getCreatedAt()
+                tweet.getCreatedAt(),
+                0
         );
     }
 }
