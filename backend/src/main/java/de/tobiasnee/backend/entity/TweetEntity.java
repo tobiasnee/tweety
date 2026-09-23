@@ -38,4 +38,8 @@ public class TweetEntity {
     void onCreate() {
         this.createdAt = Instant.now();
     }
+
+    public void changeText(String newText) {
+        this.text = Objects.requireNonNull(newText, "text must not be null");
+    }
 }
