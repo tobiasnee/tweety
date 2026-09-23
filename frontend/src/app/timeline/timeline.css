@@ -112,3 +112,78 @@
     order: -1;
   }
 }
+
+.counter.warn {
+  color: #b3261e;
+}
+
+.error {
+  margin: 0.5rem 0 0;
+  color: #b3261e;
+  font-size: 0.9rem;
+}
+
+.compose button:not(:disabled) {
+  cursor: pointer;
+}
+
+.compose button:hover:not(:disabled) {
+  background: var(--canary-deep);
+}
+
+.tweet-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tweet {
+  display: flex;
+  gap: 0.85rem;
+  padding: 1rem 0.25rem;
+  border-bottom: 1px solid #efe6d2;
+}
+
+.tweet-avatar {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  background: var(--canary);
+  font-weight: 800;
+}
+
+.tweet-body {
+  min-width: 0;
+}
+
+.tweet-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem;
+}
+
+.tweet-date {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.tweet-text {
+  margin: 0.25rem 0 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.tweet-list .empty {
+  padding: 1.5rem 0;
+}
+
+.tweet-likes {
+  display: inline-block;
+  margin-top: 0.35rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
