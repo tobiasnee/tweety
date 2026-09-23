@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { switchMap } from 'rxjs';
 import { CurrentUser } from '../auth/current-user';
 import { TweetApi } from '../tweet/tweet-api';
 import { TweetResponse } from '../tweet/tweet.model';
@@ -59,22 +60,25 @@ export class Timeline implements OnInit {
     this.submitting.set(true);
     this.errorMessage.set(null);
 
-    this.tweetApi.createTweet({ authorId: me.id, text: this.text.value }).subscribe({
-      next: () => {
-        this.text.reset();
-        this.submitting.set(false);
-        this.loadTweets();
-      },
-      error: (err: HttpErrorResponse) => {
-        if (err.status === 400) {
-          this.errorMessage.set('Your tweet is not valid.');
-        } else if (err.status === 404) {
-          this.errorMessage.set('Your user no longer exists. Please log in again.');
-        } else {
-          this.errorMessage.set('Could not post your tweet.');
-        }
-        this.submitting.set(false);
-      },
-    });
+    this.tweetApi
+      .createTweet({ authorId: me.id, text: this.text.value })
+      .pipe(switchMap(() => this.tweetApi.getTweets()))
+      .subscribe({
+        next: (tweets) => {
+          this.tweets.set(tweets);
+          this.text.reset();
+          this.submitting.set(false);
+        },
+        error: (err: HttpErrorResponse) => {
+          if (err.status === 400) {
+            this.errorMessage.set('Your tweet is not valid.');
+          } else if (err.status === 404) {
+            this.errorMessage.set('Your user no longer exists. Please log in again.');
+          } else {
+            this.errorMessage.set('Could not post your tweet.');
+          }
+          this.submitting.set(false);
+        },
+      });
   }
 }

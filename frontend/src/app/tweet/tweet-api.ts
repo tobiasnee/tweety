@@ -1,7 +1,7 @@
 import { inject, Service } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { CreateTweetRequest, TweetResponse } from './tweet.model';
+import { map, Observable } from 'rxjs';
+import { CreateTweetRequest, Page, TweetResponse } from './tweet.model';
 
 @Service()
 export class TweetApi {
@@ -13,6 +13,8 @@ export class TweetApi {
   }
 
   getTweets(): Observable<TweetResponse[]> {
-    return this.http.get<TweetResponse[]>(this.baseUrl);
+    return this.http
+      .get<Page<TweetResponse>>(this.baseUrl)
+      .pipe(map((page) => page.content));
   }
 }
