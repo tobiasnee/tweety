@@ -187,3 +187,54 @@
   color: var(--muted);
   font-size: 0.85rem;
 }
+
+.tweet-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.35rem;
+}
+
+.tweet-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+
+.tweet-actions button {
+  padding: 0.25rem 0.75rem;
+  border: 2px solid #e3d9c6;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tweet-actions button:hover:not(:disabled) {
+  border-color: var(--canary-deep);
+  background: var(--canary);
+}
+
+.tweet-actions button.danger:hover {
+  border-color: #b3261e;
+  background: #b3261e;
+  color: #fff;
+}
+
+.tweet-actions button:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.tweet-body textarea {
+  width: 100%;
+  padding: 0.5rem 0.7rem;
+  border: 2px solid #e3d9c6;
+  border-radius: 0.5rem;
+  font: inherit;
+  resize: vertical;
+}

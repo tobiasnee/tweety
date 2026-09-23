@@ -25,3 +25,8 @@ export interface Page<T> {
   size: number;
   last: boolean;
 }
+
+export interface UpdateTweetRequest {
+  editorId: number;
+  text: string;
+}
