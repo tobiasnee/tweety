@@ -1,8 +1,10 @@
 package de.tobiasnee.backend.service;
 
 import de.tobiasnee.backend.dto.CreateTweetRequest;
-import de.tobiasnee.backend.entity.TweetEntity;
-import de.tobiasnee.backend.entity.UserEntity;
+import de.tobiasnee.backend.repository.projection.TweetListItem;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import java.time.Instant;import de.tobiasnee.backend.entity.UserEntity;
 import de.tobiasnee.backend.exception.UserNotFoundException;
 import de.tobiasnee.backend.repository.TweetRepository;
 import de.tobiasnee.backend.repository.UserRepository;
@@ -62,13 +64,13 @@ class TweetServiceTest {
 
     @Test
     void getAllTweets_returnsMappedTweets() {
-        when(tweetRepository.findAllByOrderByCreatedAtDesc()).thenReturn(List.of(
-                new TweetEntity(author, "Neuester Tweet"),
-                new TweetEntity(author, "Älterer Tweet")
-        ));
+        when(tweetRepository.findTimeline(any())).thenReturn(new PageImpl<>(List.of(
+                new TweetListItem(2L, "Neuester Tweet", Instant.now(), 1L, "Max", "Mustermann"),
+                new TweetListItem(1L, "Älterer Tweet", Instant.now(), 1L, "Max", "Mustermann")
+        )));
 
-        var result = tweetService.getAllTweets();
+        var result = tweetService.getAllTweets(PageRequest.of(0, 20));
 
-        assertThat(result).extracting("text")
+        assertThat(result.getContent()).extracting("text")
                 .containsExactly("Neuester Tweet", "Älterer Tweet");
     }}

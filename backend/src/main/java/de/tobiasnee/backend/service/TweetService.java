@@ -7,10 +7,10 @@ import de.tobiasnee.backend.entity.UserEntity;
 import de.tobiasnee.backend.exception.UserNotFoundException;
 import de.tobiasnee.backend.repository.TweetRepository;
 import de.tobiasnee.backend.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 public class TweetService {
@@ -34,16 +34,12 @@ public class TweetService {
     }
 
     @Transactional(readOnly = true)
-    public List<TweetResponse> getAllTweets() {
-        return tweetRepository.findAllByOrderByCreatedAtDesc().stream()
-                .map(TweetResponse::from)
-                .toList();
+    public Page<TweetResponse> getAllTweets(Pageable pageable) {
+        return tweetRepository.findTimeline(pageable).map(TweetResponse::from);
     }
 
     @Transactional(readOnly = true)
-    public List<TweetResponse> getTweetsByAuthorId(Long authorId) {
-        return tweetRepository.findAllByAuthorIdOrderByCreatedAtDesc(authorId).stream()
-                .map(TweetResponse::from)
-                .toList();
+    public Page<TweetResponse> getTweetsByAuthorId(Long authorId, Pageable pageable) {
+        return tweetRepository.findTimelineByAuthor(authorId, pageable).map(TweetResponse::from);
     }
 }

@@ -4,11 +4,17 @@ import de.tobiasnee.backend.dto.CreateTweetRequest;
 import de.tobiasnee.backend.dto.TweetResponse;
 import de.tobiasnee.backend.service.TweetService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/tweets")
@@ -29,5 +35,7 @@ public class TweetController {
     }
 
     @GetMapping
-    public List<TweetResponse> getAllTweets() { return tweetService.getAllTweets(); }
+    public Page<TweetResponse> getAllTweets(@PageableDefault(size = 20) Pageable pageable) {
+        return tweetService.getAllTweets(pageable);
+    }
 }
