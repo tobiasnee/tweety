@@ -8,7 +8,7 @@
         <textarea
           rows="3"
           [formControl]="text"
-          [attr.maxlength]="maxLength"
+          [attr.maxlength]="maxLength()"
           placeholder="Share something …">
         </textarea>
 
@@ -41,7 +41,7 @@
                 </div>
 
                 @if (editingId() === tweet.id) {
-                  <textarea rows="2" [formControl]="editText" [attr.maxlength]="maxLength"></textarea>
+                  <textarea rows="2" [formControl]="editText" [attr.maxlength]="maxLength()"></textarea>
                   <div class="tweet-actions">
                     <button type="button" (click)="saveEdit(tweet.id)" [disabled]="editText.invalid">
                       Save

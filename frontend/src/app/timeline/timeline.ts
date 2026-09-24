@@ -6,6 +6,7 @@ import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { switchMap } from 'rxjs';
 import { CurrentUser } from '../auth/current-user';
+import { ConfigApi } from '../config/config-api';
 import { TweetApi } from '../tweet/tweet-api';
 import { TweetResponse } from '../tweet/tweet.model';
 
@@ -17,22 +18,23 @@ import { TweetResponse } from '../tweet/tweet.model';
 })
 export class Timeline implements OnInit {
   private tweetApi = inject(TweetApi);
+  private configApi = inject(ConfigApi);
   protected user = inject(CurrentUser).user;
 
-  protected readonly maxLength = 280;
+  protected maxLength = signal(280);
 
   protected text = new FormControl('', {
     nonNullable: true,
-    validators: [Validators.required, Validators.maxLength(this.maxLength), Validators.pattern(/\S/)],
+    validators: [Validators.required, Validators.pattern(/\S/)],
   });
 
   protected editText = new FormControl('', {
     nonNullable: true,
-    validators: [Validators.required, Validators.maxLength(this.maxLength), Validators.pattern(/\S/)],
+    validators: [Validators.required, Validators.pattern(/\S/)],
   });
 
   private textValue = toSignal(this.text.valueChanges, { initialValue: '' });
-  protected remaining = computed(() => this.maxLength - this.textValue().length);
+  protected remaining = computed(() => this.maxLength() - this.textValue().length);
 
   protected tweets = signal<TweetResponse[]>([]);
   protected loading = signal(false);
@@ -43,7 +45,29 @@ export class Timeline implements OnInit {
   protected errorMessage = signal<string | null>(null);
 
   ngOnInit(): void {
+    this.applyLengthValidator(this.text);
+    this.applyLengthValidator(this.editText);
+    this.loadConfig();
     this.loadTweets();
+  }
+
+  private loadConfig(): void {
+    this.configApi.getConfig().subscribe({
+      next: (config) => {
+        this.maxLength.set(config.maxTweetLength);
+        this.applyLengthValidator(this.text);
+        this.applyLengthValidator(this.editText);
+      },
+    });
+  }
+
+  private applyLengthValidator(control: FormControl<string>): void {
+    control.setValidators([
+      Validators.required,
+      Validators.pattern(/\S/),
+      Validators.maxLength(this.maxLength()),
+    ]);
+    control.updateValueAndValidity();
   }
 
   protected loadTweets(): void {
@@ -77,7 +101,7 @@ export class Timeline implements OnInit {
         },
         error: (err: HttpErrorResponse) => {
           if (err.status === 400) {
-            this.errorMessage.set('Your tweet is not valid.');
+            this.errorMessage.set(err.error?.message ?? 'Your tweet is not valid.');
           } else if (err.status === 404) {
             this.errorMessage.set('Your user no longer exists. Please log in again.');
           } else {
@@ -114,7 +138,9 @@ export class Timeline implements OnInit {
         this.editingId.set(null);
       },
       error: (err: HttpErrorResponse) => {
-        if (err.status === 404) {
+        if (err.status === 400) {
+          this.errorMessage.set(err.error?.message ?? 'Your tweet is not valid.');
+        } else if (err.status === 404) {
           this.errorMessage.set('This tweet no longer exists.');
         } else if (err.status === 403) {
           this.errorMessage.set('You can only edit your own tweets.');
