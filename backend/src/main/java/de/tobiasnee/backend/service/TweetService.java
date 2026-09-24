@@ -7,9 +7,11 @@ import de.tobiasnee.backend.entity.TweetEntity;
 import de.tobiasnee.backend.entity.UserEntity;
 import de.tobiasnee.backend.exception.NotTheAuthorException;
 import de.tobiasnee.backend.exception.TweetNotFoundException;
+import de.tobiasnee.backend.exception.TweetTooLongException;
 import de.tobiasnee.backend.exception.UserNotFoundException;
 import de.tobiasnee.backend.repository.TweetRepository;
 import de.tobiasnee.backend.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -20,14 +22,20 @@ public class TweetService {
 
     private final TweetRepository tweetRepository;
     private final UserRepository userRepository;
+    private final int maxTweetLength;
 
-    public TweetService(TweetRepository tweetRepository, UserRepository userRepository) {
+    public TweetService(TweetRepository tweetRepository,
+                        UserRepository userRepository,
+                        @Value("${app.max-tweet-length}") int maxTweetLength) {
         this.tweetRepository = tweetRepository;
         this.userRepository = userRepository;
+        this.maxTweetLength = maxTweetLength;
     }
 
     @Transactional
     public TweetResponse createTweet(CreateTweetRequest request) {
+        checkLength(request.text());
+
         UserEntity author = userRepository.findById(request.authorId())
                 .orElseThrow(() -> new UserNotFoundException(
                         "Benutzer mit ID " + request.authorId() + " wurde nicht gefunden."));
@@ -45,8 +53,11 @@ public class TweetService {
     public Page<TweetResponse> getTweetsByAuthorId(Long authorId, Pageable pageable) {
         return tweetRepository.findTimelineByAuthor(authorId, pageable).map(TweetResponse::from);
     }
+
     @Transactional
     public TweetResponse updateTweet(Long tweetId, UpdateTweetRequest request) {
+        checkLength(request.text());
+
         TweetEntity tweet = loadOwnTweet(tweetId, request.editorId());
         tweet.changeText(request.text());
         return TweetResponse.from(tweet);
@@ -69,5 +80,13 @@ public class TweetService {
         }
 
         return tweet;
+    }
+
+    private void checkLength(String text) {
+        if (text != null && text.length() > maxTweetLength) {
+            throw new TweetTooLongException(
+                    "Text darf höchstens " + maxTweetLength + " Zeichen lang sein (aktuell "
+                            + text.length() + ").");
+        }
     }
 }

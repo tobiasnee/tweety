@@ -10,7 +10,6 @@ public record UpdateTweetRequest(
         Long editorId,
 
         @NotBlank(message = "Text darf nicht leer sein.")
-        @Size(max = 280, message = "Text darf höchstens 280 Zeichen lang sein.")
         String text
 
 ) {}

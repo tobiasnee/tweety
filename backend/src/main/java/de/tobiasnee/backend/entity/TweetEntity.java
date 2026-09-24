@@ -19,7 +19,7 @@ public class TweetEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 280)
+    @Column(nullable = false, length = 2000)
     private String text;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

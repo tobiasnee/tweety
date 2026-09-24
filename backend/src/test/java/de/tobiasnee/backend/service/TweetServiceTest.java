@@ -6,14 +6,15 @@ import de.tobiasnee.backend.entity.TweetEntity;
 import de.tobiasnee.backend.entity.UserEntity;
 import de.tobiasnee.backend.exception.NotTheAuthorException;
 import de.tobiasnee.backend.exception.TweetNotFoundException;
+import de.tobiasnee.backend.exception.TweetTooLongException;
 import de.tobiasnee.backend.exception.UserNotFoundException;
 import de.tobiasnee.backend.repository.TweetRepository;
 import de.tobiasnee.backend.repository.UserRepository;
 import de.tobiasnee.backend.repository.projection.TweetListItem;
 import org.assertj.core.api.SoftAssertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
@@ -32,16 +33,22 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class TweetServiceTest {
 
+    private static final int MAX_TWEET_LENGTH = 20;
+
     @Mock
     private TweetRepository tweetRepository;
 
     @Mock
     private UserRepository userRepository;
 
-    @InjectMocks
     private TweetService tweetService;
 
     private final UserEntity author = authorWithId();
+
+    @BeforeEach
+    void setUp() {
+        tweetService = new TweetService(tweetRepository, userRepository, MAX_TWEET_LENGTH);
+    }
 
 
     @Test
@@ -67,6 +74,27 @@ class TweetServiceTest {
                 .isInstanceOf(UserNotFoundException.class);
         verify(tweetRepository, never()).save(any());
     }
+
+    @Test
+    void createTweet_failsWhenTextTooLong() {
+        var tooLong = "x".repeat(MAX_TWEET_LENGTH + 1);
+
+        assertThatThrownBy(() -> tweetService.createTweet(new CreateTweetRequest(1L, tooLong)))
+                .isInstanceOf(TweetTooLongException.class);
+        verify(tweetRepository, never()).save(any());
+    }
+
+    @Test
+    void createTweet_acceptsTextAtMaxLength() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(author));
+        when(tweetRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        var exactly = "x".repeat(MAX_TWEET_LENGTH);
+
+        assertThat(tweetService.createTweet(new CreateTweetRequest(1L, exactly)).text())
+                .hasSize(MAX_TWEET_LENGTH);
+    }
+
 
     @Test
     void getAllTweets_returnsMappedTweets() {
@@ -107,6 +135,14 @@ class TweetServiceTest {
         assertThatThrownBy(() -> tweetService.updateTweet(1L, new UpdateTweetRequest(99L, "Neu")))
                 .isInstanceOf(NotTheAuthorException.class);
         assertThat(tweet.getText()).isEqualTo("Alter Text");
+    }
+
+    @Test
+    void updateTweet_failsWhenTextTooLong() {
+        var tooLong = "x".repeat(MAX_TWEET_LENGTH + 1);
+
+        assertThatThrownBy(() -> tweetService.updateTweet(1L, new UpdateTweetRequest(1L, tooLong)))
+                .isInstanceOf(TweetTooLongException.class);
     }
 
     @Test
