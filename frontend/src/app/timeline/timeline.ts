@@ -9,6 +9,7 @@ import { CurrentUser } from '../auth/current-user';
 import { ConfigApi } from '../config/config-api';
 import { TweetApi } from '../tweet/tweet-api';
 import { TweetResponse } from '../tweet/tweet.model';
+import { ApiError } from '../shared/api-error.model';
 
 @Component({
   selector: 'app-timeline',
@@ -100,10 +101,12 @@ export class Timeline implements OnInit {
           this.submitting.set(false);
         },
         error: (err: HttpErrorResponse) => {
+          const apiError = err.error as ApiError | undefined;
+
           if (err.status === 400) {
-            this.errorMessage.set(err.error?.message ?? 'Your tweet is not valid.');
+            this.errorMessage.set(apiError?.message ?? 'Your tweet is not valid.');
           } else if (err.status === 404) {
-            this.errorMessage.set('Your user no longer exists. Please log in again.');
+            this.errorMessage.set(apiError?.message ?? 'Your user no longer exists. Please log in again.');
           } else {
             this.errorMessage.set('Could not post your tweet.');
           }
@@ -138,12 +141,10 @@ export class Timeline implements OnInit {
         this.editingId.set(null);
       },
       error: (err: HttpErrorResponse) => {
-        if (err.status === 400) {
-          this.errorMessage.set(err.error?.message ?? 'Your tweet is not valid.');
-        } else if (err.status === 404) {
-          this.errorMessage.set('This tweet no longer exists.');
-        } else if (err.status === 403) {
-          this.errorMessage.set('You can only edit your own tweets.');
+        const apiError = err.error as ApiError | undefined;
+
+        if (err.status === 400 || err.status === 403 || err.status === 404) {
+          this.errorMessage.set(apiError?.message ?? 'Could not update your tweet.');
         } else {
           this.errorMessage.set('Could not update your tweet.');
         }
@@ -167,10 +168,10 @@ export class Timeline implements OnInit {
         }
       },
       error: (err: HttpErrorResponse) => {
-        if (err.status === 404) {
-          this.errorMessage.set('This tweet no longer exists.');
-        } else if (err.status === 403) {
-          this.errorMessage.set('You can only delete your own tweets.');
+        const apiError = err.error as ApiError | undefined;
+
+        if (err.status === 403 || err.status === 404) {
+          this.errorMessage.set(apiError?.message ?? 'Could not delete your tweet.');
         } else {
           this.errorMessage.set('Could not delete your tweet.');
         }

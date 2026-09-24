@@ -3,16 +3,19 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { UserApi } from './user-api';
 import { UserResponse } from './user.model';
+import { ApiError } from '../shared/api-error.model';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-user',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './user.html',
   styleUrl: './user.css',
 })
 export class User {
   private userApi = inject(UserApi);
   private fb = inject(FormBuilder);
+  fieldErrors = signal<Record<string, string>>({});
 
   form = this.fb.nonNullable.group({
     username: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(50)]],
@@ -41,10 +44,15 @@ export class User {
         this.form.reset();
       },
       error: (err: HttpErrorResponse) => {
-        if (err.status === 400) {
-          this.errorMessage.set('Invalid request');
-        } else if (err.status === 409) {
-          this.errorMessage.set('User already exists');
+        const apiError = err.error as ApiError | undefined;
+
+        if (err.status === 409) {
+          this.errorMessage.set(apiError?.message ?? 'User already exists');
+        } else if (err.status === 400) {
+          this.fieldErrors.set(apiError?.fieldErrors ?? {});
+          this.errorMessage.set(apiError?.message ?? 'Invalid request');
+        } else if (err.status === 0) {
+          this.errorMessage.set('Backend not reachable');
         } else {
           this.errorMessage.set('An unexpected error occurred');
         }
