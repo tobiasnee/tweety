@@ -6,18 +6,17 @@ import de.tobiasnee.backend.entity.UserEntity;
 import de.tobiasnee.backend.exception.DuplicateUserException;
 import de.tobiasnee.backend.exception.UserNotFoundException;
 import de.tobiasnee.backend.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
 
-    public UserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
 
     public UserResponse createUser(CreateUserRequest request) {
         if (userRepository.existsByUsername(request.username())) {
