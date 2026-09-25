@@ -1,4 +1,4 @@
-import { computed, Service, signal } from '@angular/core';
+import { computed, effect, Service, signal } from '@angular/core';
 import { UserResponse } from '../user/user.model';
 
 const STORAGE_KEY = 'tweety.currentUser';
@@ -10,14 +10,26 @@ export class CurrentUser {
   readonly user = this._user.asReadonly();
   readonly isLoggedIn = computed(() => this._user() !== null);
 
+  constructor() {
+    effect(() => {
+      const user = this._user();
+      try {
+        if (user) {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+        } else {
+          localStorage.removeItem(STORAGE_KEY);
+        }
+      } catch {
+      }
+    });
+  }
+
   login(user: UserResponse): void {
     this._user.set(user);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
   }
 
   logout(): void {
     this._user.set(null);
-    localStorage.removeItem(STORAGE_KEY);
   }
 
   private loadFromStorage(): UserResponse | null {
@@ -28,8 +40,8 @@ export class CurrentUser {
     try {
       return JSON.parse(item) as UserResponse;
     } catch {
-    localStorage.removeItem(STORAGE_KEY);
-    return null;
+      localStorage.removeItem(STORAGE_KEY);
+      return null;
     }
   }
 }

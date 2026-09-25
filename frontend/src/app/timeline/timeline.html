@@ -24,13 +24,13 @@
         }
       </div>
 
-      <h3 class="section-title">Timeline ({{ tweetCount() }})</h3>
+      <h3 class="section-title">Timeline ({{ store.tweetCount() }})</h3>
 
-      @if (loading() && tweets().length === 0) {
+      @if (store.loading() && store.tweets().length === 0) {
         <p class="empty">Loading tweets …</p>
       } @else {
         <ul class="tweet-list">
-          @for (tweet of tweets(); track tweet.id) {
+          @for (tweet of store.tweets(); track tweet.id) {
             <li class="tweet">
               <div class="tweet-avatar">{{ tweet.author.displayName.charAt(0) }}</div>
               <div class="tweet-body">
