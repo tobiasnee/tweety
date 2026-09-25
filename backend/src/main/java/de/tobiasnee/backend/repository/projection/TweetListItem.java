@@ -8,5 +8,7 @@ public record TweetListItem(
         Instant createdAt,
         Long authorId,
         String authorUsername,
-        String authorDisplayName
+        String authorDisplayName,
+        long likeCount,
+        boolean likedByMe
 ) {}

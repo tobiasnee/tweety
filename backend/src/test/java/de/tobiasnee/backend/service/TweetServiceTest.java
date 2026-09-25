@@ -50,18 +50,21 @@ class TweetServiceTest {
         tweetService = new TweetService(tweetRepository, userRepository, MAX_TWEET_LENGTH);
     }
 
+    // ---------- createTweet ----------
 
     @Test
     void createTweetSavesTweet() {
         when(userRepository.findById(1L)).thenReturn(Optional.of(author));
         when(tweetRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        var response = tweetService.createTweet(new CreateTweetRequest(1L, "Mein erster Tweet"));
+        var response = tweetService.createTweet(new CreateTweetRequest(1L, "Kurzer Tweet"));
 
         SoftAssertions.assertSoftly(softly -> {
-            softly.assertThat(response.text()).isEqualTo("Mein erster Tweet");
+            softly.assertThat(response.text()).isEqualTo("Kurzer Tweet");
             softly.assertThat(response.author().username()).isEqualTo("Max");
             softly.assertThat(response.author().displayName()).isEqualTo("Mustermann");
+            softly.assertThat(response.likeCount()).isZero();
+            softly.assertThat(response.likedByMe()).isFalse();
         });
         verify(tweetRepository).save(any());
     }
@@ -95,19 +98,29 @@ class TweetServiceTest {
                 .hasSize(MAX_TWEET_LENGTH);
     }
 
+    // ---------- getAllTweets ----------
 
     @Test
     void getAllTweets_returnsMappedTweets() {
-        when(tweetRepository.findTimeline(any())).thenReturn(new PageImpl<>(List.of(
-                new TweetListItem(2L, "Neuester Tweet", Instant.now(), 1L, "Max", "Mustermann"),
-                new TweetListItem(1L, "Älterer Tweet", Instant.now(), 1L, "Max", "Mustermann")
+        when(tweetRepository.findTimeline(any(), any())).thenReturn(new PageImpl<>(List.of(
+                new TweetListItem(2L, "Neuester Tweet", Instant.now(), 1L, "Max", "Mustermann", 0L, false),
+                new TweetListItem(1L, "Älterer Tweet", Instant.now(), 1L, "Max", "Mustermann", 3L, true)
         )));
 
-        var result = tweetService.getAllTweets(PageRequest.of(0, 20));
+        var result = tweetRepository.findTimeline(author.getId(), PageRequest.of(0, 10));
 
         assertThat(result.getContent()).extracting("text")
                 .containsExactly("Neuester Tweet", "Älterer Tweet");
+
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(result.getContent().get(1).likeCount()).isEqualTo(3L);
+            softly.assertThat(result.getContent().get(1).likedByMe()).isTrue();
+            softly.assertThat(result.getContent().get(0).likeCount()).isZero();
+            softly.assertThat(result.getContent().get(0).likedByMe()).isFalse();
+        });
     }
+
+    // ---------- updateTweet ----------
 
     @Test
     void updateTweet_changesText() {
@@ -145,6 +158,8 @@ class TweetServiceTest {
                 .isInstanceOf(TweetTooLongException.class);
     }
 
+    // ---------- deleteTweet ----------
+
     @Test
     void deleteTweet_removesTweet() {
         var tweet = tweetWithId(1L, author, "Text");
@@ -164,6 +179,8 @@ class TweetServiceTest {
                 .isInstanceOf(NotTheAuthorException.class);
         verify(tweetRepository, never()).delete(any());
     }
+
+    // ---------- Hilfsmethoden ----------
 
     private static UserEntity authorWithId() {
         var user = new UserEntity("Max", "max@mustermann.com", "Mustermann");

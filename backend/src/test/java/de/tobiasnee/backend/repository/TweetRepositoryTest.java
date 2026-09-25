@@ -24,7 +24,7 @@ class TweetRepositoryTest {
         tweetRepository.save(new TweetEntity(author, "Mein erster Tweet"));
         tweetRepository.save(new TweetEntity(author, "Mein zweiter Tweet"));
 
-        var result = tweetRepository.findTimeline(PageRequest.of(0, 10));
+        var result = tweetRepository.findTimeline(author.getId(), PageRequest.of(0, 10));
 
         assertThat(result.getContent()).extracting("text")
                 .containsExactly("Mein zweiter Tweet", "Mein erster Tweet");
@@ -39,7 +39,7 @@ class TweetRepositoryTest {
         tweetRepository.save(new TweetEntity(franz, "Franz erster Tweet"));
         tweetRepository.save(new TweetEntity(max, "Max zweiter Tweet"));
 
-        var result = tweetRepository.findTimelineByAuthor(max.getId(), PageRequest.of(0, 10));
+        var result = tweetRepository.findTimelineByAuthor(max.getId(), max.getId(), PageRequest.of(0, 10));
 
         assertThat(result.getContent()).extracting("text")
                 .containsExactly("Max zweiter Tweet", "Max erster Tweet");

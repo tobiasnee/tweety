@@ -32,8 +32,10 @@ public class TweetController {
     }
 
     @GetMapping
-    public Page<TweetResponse> getAllTweets(@PageableDefault(size = 20) Pageable pageable) {
-        return tweetService.getAllTweets(pageable);
+    public Page<TweetResponse> getAllTweets(
+            @RequestParam(required = false) Long currentUserId,
+            @PageableDefault(size = 20) Pageable pageable) {
+        return tweetService.getAllTweets(currentUserId, pageable);
     }
 
     @PutMapping("/{id}")

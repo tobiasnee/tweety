@@ -45,13 +45,13 @@ public class TweetService {
     }
 
     @Transactional(readOnly = true)
-    public Page<TweetResponse> getAllTweets(Pageable pageable) {
-        return tweetRepository.findTimeline(pageable).map(TweetResponse::from);
+    public Page<TweetResponse> getAllTweets(Long currentUserId, Pageable pageable) {
+        return tweetRepository.findTimeline(currentUserId, pageable).map(TweetResponse::from);
     }
 
     @Transactional(readOnly = true)
-    public Page<TweetResponse> getTweetsByAuthorId(Long authorId, Pageable pageable) {
-        return tweetRepository.findTimelineByAuthor(authorId, pageable).map(TweetResponse::from);
+    public Page<TweetResponse> getTweetsByAuthorId(Long authorId, Long currentUserId, Pageable pageable) {
+        return tweetRepository.findTimelineByAuthor(authorId, currentUserId, pageable).map(TweetResponse::from);
     }
 
     @Transactional

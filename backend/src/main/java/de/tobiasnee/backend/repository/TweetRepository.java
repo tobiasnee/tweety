@@ -11,23 +11,29 @@ import org.springframework.data.repository.query.Param;
 public interface TweetRepository extends JpaRepository<TweetEntity, Long> {
 
     @Query(value = """
-            select new de.tobiasnee.backend.repository.projection.TweetListItem(
-                t.id, t.text, t.createdAt, a.id, a.username, a.displayName)
-            from TweetEntity t
-            join t.author a
-            order by t.createdAt desc
-            """,
+        select new de.tobiasnee.backend.repository.projection.TweetListItem(
+            t.id, t.text, t.createdAt, a.id, a.username, a.displayName,
+            (select count(l) from LikeEntity l where l.tweet = t),
+            (select count(l2) > 0 from LikeEntity l2 where l2.tweet = t and l2.user.id = :currentUserId))
+        from TweetEntity t
+        join t.author a
+        order by t.createdAt desc
+        """,
             countQuery = "select count(t) from TweetEntity t")
-    Page<TweetListItem> findTimeline(Pageable pageable);
+    Page<TweetListItem> findTimeline(@Param("currentUserId") Long currentUserId, Pageable pageable);
 
     @Query(value = """
             select new de.tobiasnee.backend.repository.projection.TweetListItem(
-                t.id, t.text, t.createdAt, a.id, a.username, a.displayName)
+                t.id, t.text, t.createdAt, a.id, a.username, a.displayName,
+                (select count(l) from LikeEntity l where l.tweet = t),
+                (select count(l2) > 0 from LikeEntity l2 where l2.tweet = t and l2.user.id = :currentUserId))
             from TweetEntity t
             join t.author a
             where a.id = :authorId
             order by t.createdAt desc
             """,
             countQuery = "select count(t) from TweetEntity t where t.author.id = :authorId")
-    Page<TweetListItem> findTimelineByAuthor(@Param("authorId") Long authorId, Pageable pageable);
+    Page<TweetListItem> findTimelineByAuthor(@Param("authorId") Long authorId,
+                                             @Param("currentUserId") Long currentUserId,
+                                             Pageable pageable);
 }

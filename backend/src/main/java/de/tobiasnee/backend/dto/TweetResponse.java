@@ -10,7 +10,8 @@ public record TweetResponse(
         String text,
         TweetAuthor author,
         Instant createdAt,
-        int likeCount
+        long likeCount,
+        boolean likedByMe
 ) {
 
     public static TweetResponse from(TweetEntity tweet) {
@@ -19,7 +20,8 @@ public record TweetResponse(
                 tweet.getText(),
                 TweetAuthor.from(tweet.getAuthor()),
                 tweet.getCreatedAt(),
-                0
+                0L,
+                false
         );
     }
 
@@ -29,7 +31,8 @@ public record TweetResponse(
                 item.text(),
                 new TweetAuthor(item.authorId(), item.authorUsername(), item.authorDisplayName()),
                 item.createdAt(),
-                0
+                item.likeCount(),
+                item.likedByMe()
         );
     }
 }
