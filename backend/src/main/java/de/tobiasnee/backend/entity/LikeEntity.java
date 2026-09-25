@@ -7,39 +7,36 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
 import java.time.Instant;
-import java.util.Objects;
 
 @Entity
-@Table(name = "tweets")
+@Table(name = "likes", uniqueConstraints = @UniqueConstraint(
+        name = "uk_likes_tweet_user", columnNames = {"tweet_id", "user_id"}))
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class TweetEntity {
+public class LikeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 2000)
-    private String text;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "tweet_id")
+    private TweetEntity tweet;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "author_id")
-    private UserEntity author;
+    @JoinColumn(name = "user_id")
+    private UserEntity user;
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
-    public TweetEntity(@NonNull UserEntity author, String text) {
-        this.author = author;
-        this.text = text;
+    public LikeEntity(@NonNull TweetEntity tweet, @NonNull UserEntity user) {
+        this.tweet = tweet;
+        this.user = user;
     }
 
     @PrePersist
     void onCreate() {
         this.createdAt = Instant.now();
-    }
-
-    public void changeText(String newText) {
-        this.text = Objects.requireNonNull(newText, "text must not be null");
     }
 }

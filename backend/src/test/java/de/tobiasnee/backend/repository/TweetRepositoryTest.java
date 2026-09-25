@@ -3,6 +3,7 @@ package de.tobiasnee.backend.repository;
 import de.tobiasnee.backend.entity.TweetEntity;
 import de.tobiasnee.backend.entity.UserEntity;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 
@@ -18,18 +19,19 @@ class TweetRepositoryTest {
     private UserRepository userRepository;
 
     @Test
-    void findAllByOrderByCreatedAtDesc_returnsNewestFirst() {
+    void findTimeline_returnsNewestFirst() {
         var author = userRepository.save(new UserEntity("Max", "max@mustermann.com", "Mustermann"));
         tweetRepository.save(new TweetEntity(author, "Mein erster Tweet"));
         tweetRepository.save(new TweetEntity(author, "Mein zweiter Tweet"));
 
-        var result = tweetRepository.findAllByOrderByCreatedAtDesc();
+        var result = tweetRepository.findTimeline(author.getId(), PageRequest.of(0, 10));
 
-        assertThat(result).extracting("text").containsExactly("Mein zweiter Tweet", "Mein erster Tweet");
+        assertThat(result.getContent()).extracting("text")
+                .containsExactly("Mein zweiter Tweet", "Mein erster Tweet");
     }
 
     @Test
-    void findAllByAuthorIdOrderByCreatedAtDesc_returnsOnlyTweetsOfAuthor() {
+    void findTimelineByAuthor_returnsOnlyTweetsOfAuthor() {
         var max = userRepository.save(new UserEntity("Max", "max@mustermann.com", "Mustermann"));
         var franz = userRepository.save(new UserEntity("Franz", "franz@franz.com", "Franziskus"));
 
@@ -37,9 +39,9 @@ class TweetRepositoryTest {
         tweetRepository.save(new TweetEntity(franz, "Franz erster Tweet"));
         tweetRepository.save(new TweetEntity(max, "Max zweiter Tweet"));
 
-        var result = tweetRepository.findAllByAuthorIdOrderByCreatedAtDesc(max.getId());
+        var result = tweetRepository.findTimelineByAuthor(max.getId(), max.getId(), PageRequest.of(0, 10));
 
-        assertThat(result).extracting("text")
+        assertThat(result.getContent()).extracting("text")
                 .containsExactly("Max zweiter Tweet", "Max erster Tweet");
     }
 }
