@@ -12,11 +12,15 @@ export class TweetApi {
     return this.http.post<TweetResponse>(this.baseUrl, request);
   }
 
-  getTweets(): Observable<TweetResponse[]> {
-    return this.http
-      .get<Page<TweetResponse>>(this.baseUrl)
-      .pipe(map((page) => page.content));
-  }
+getTweets(currentUserId?: number): Observable<TweetResponse[]> {
+  const options = currentUserId !== undefined
+    ? { params: { currentUserId } }
+    : {};
+
+  return this.http
+    .get<Page<TweetResponse>>(this.baseUrl, options)
+    .pipe(map((page) => page.content));
+}
 
     updateTweet(id: number, request: UpdateTweetRequest): Observable<TweetResponse> {
     return this.http.put<TweetResponse>(`${this.baseUrl}/${id}`, request);

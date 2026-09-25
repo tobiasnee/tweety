@@ -15,6 +15,13 @@ export interface TweetResponse {
   author: TweetAuthor;
   createdAt: string;
   likeCount: number;
+  likedByMe: boolean;
+}
+
+export interface LikeResponse {
+  tweetId: number;
+  likeCount: number;
+  likedByMe: boolean;
 }
 
 export interface Page<T> {

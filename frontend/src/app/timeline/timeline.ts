@@ -7,6 +7,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { switchMap } from 'rxjs';
 import { CurrentUser } from '../auth/current-user';
 import { ConfigApi } from '../config/config-api';
+import { LikeApi } from '../tweet/like-api';
 import { TweetApi } from '../tweet/tweet-api';
 import { TweetResponse } from '../tweet/tweet.model';
 import { ApiError } from '../shared/api-error.model';
@@ -19,6 +20,7 @@ import { ApiError } from '../shared/api-error.model';
 })
 export class Timeline implements OnInit {
   private tweetApi = inject(TweetApi);
+  private likeApi = inject(LikeApi);
   private configApi = inject(ConfigApi);
   protected user = inject(CurrentUser).user;
 
@@ -73,7 +75,7 @@ export class Timeline implements OnInit {
 
   protected loadTweets(): void {
     this.loading.set(true);
-    this.tweetApi.getTweets().subscribe({
+    this.tweetApi.getTweets(this.user()?.id).subscribe({
       next: (tweets) => {
         this.tweets.set(tweets);
         this.loading.set(false);
@@ -93,7 +95,7 @@ export class Timeline implements OnInit {
 
     this.tweetApi
       .createTweet({ authorId: me.id, text: this.text.value })
-      .pipe(switchMap(() => this.tweetApi.getTweets()))
+      .pipe(switchMap(() => this.tweetApi.getTweets(me.id)))
       .subscribe({
         next: (tweets) => {
           this.tweets.set(tweets);
@@ -113,6 +115,35 @@ export class Timeline implements OnInit {
           this.submitting.set(false);
         },
       });
+  }
+
+  protected toggleLike(tweet: TweetResponse): void {
+    const me = this.user();
+    if (!me) {
+      return;
+    }
+
+    this.errorMessage.set(null);
+
+    const request = tweet.likedByMe
+      ? this.likeApi.unlike(tweet.id, me.id)
+      : this.likeApi.like(tweet.id, me.id);
+
+    request.subscribe({
+      next: (res) => {
+        this.tweets.update((tweets) =>
+          tweets.map((t) =>
+            t.id === res.tweetId
+              ? { ...t, likeCount: res.likeCount, likedByMe: res.likedByMe }
+              : t
+          )
+        );
+      },
+      error: (err: HttpErrorResponse) => {
+        const apiError = err.error as ApiError | undefined;
+        this.errorMessage.set(apiError?.message ?? 'Could not update the like.');
+      },
+    });
   }
 
   protected startEdit(tweet: TweetResponse): void {
@@ -136,7 +167,11 @@ export class Timeline implements OnInit {
     this.tweetApi.updateTweet(tweetId, { editorId: me.id, text: this.editText.value }).subscribe({
       next: (updated) => {
         this.tweets.update((tweets) =>
-          tweets.map((tweet) => (tweet.id === updated.id ? updated : tweet))
+          tweets.map((tweet) =>
+            tweet.id === updated.id
+              ? { ...updated, likeCount: tweet.likeCount, likedByMe: tweet.likedByMe }
+              : tweet
+          )
         );
         this.editingId.set(null);
       },

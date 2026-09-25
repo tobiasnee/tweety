@@ -181,13 +181,6 @@
   padding: 1.5rem 0;
 }
 
-.tweet-likes {
-  display: inline-block;
-  margin-top: 0.35rem;
-  color: var(--muted);
-  font-size: 0.85rem;
-}
-
 .tweet-footer {
   display: flex;
   align-items: center;
@@ -237,4 +230,25 @@
   border-radius: 0.5rem;
   font: inherit;
   resize: vertical;
+}
+
+.like-button {
+  padding: 0.2rem 0.6rem;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.like-button:hover {
+  background: #fdeaea;
+  color: #b3261e;
+}
+
+.like-button.liked {
+  color: #b3261e;
+  font-weight: 700;
 }
