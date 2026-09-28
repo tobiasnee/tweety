@@ -51,7 +51,7 @@ class TweetServiceTest {
 
     @BeforeEach
     void setUp() {
-        tweetService = new TweetService(tweetRepository, userRepository, List.of(tweetCreatedService), MAX_TWEET_LENGTH);
+        tweetService = new TweetService(tweetRepository, userRepository, List.of(tweetCreatedService), MAX_TWEET_LENGTH, false);
     }
 
 

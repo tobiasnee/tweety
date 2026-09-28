@@ -25,17 +25,20 @@ public class TweetService {
 
     private final TweetRepository tweetRepository;
     private final UserRepository userRepository;
-    private final int maxTweetLength;
     private final List<TweetCreatedService> tweetCreatedServices;
+    private final int maxTweetLength;
+    private final boolean simulateFailure;
 
     public TweetService(TweetRepository tweetRepository,
                         UserRepository userRepository,
                         List<TweetCreatedService> tweetCreatedServices,
-                        @Value("${app.max-tweet-length}") int maxTweetLength) {
+                        @Value("${app.max-tweet-length}") int maxTweetLength,
+                        @Value("${app.simulate-failure-after-tweet:false}") boolean simulateFailure) {
         this.tweetRepository = tweetRepository;
         this.userRepository = userRepository;
         this.tweetCreatedServices = tweetCreatedServices;
         this.maxTweetLength = maxTweetLength;
+        this.simulateFailure = simulateFailure;
     }
 
     @Transactional
@@ -48,6 +51,12 @@ public class TweetService {
 
         TweetEntity saved = tweetRepository.save(new TweetEntity(author, request.text()));
         tweetCreatedServices.forEach(service -> service.handle(saved));
+
+        if (simulateFailure) {
+            throw new IllegalStateException(
+                    "Simulierter Fehler nach dem Speichern des Tweets (app.simulate-failure-after-tweet=true).");
+        }
+
         return TweetResponse.from(saved);
     }
 
