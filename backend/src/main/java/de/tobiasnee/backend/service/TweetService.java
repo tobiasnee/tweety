@@ -11,11 +11,14 @@ import de.tobiasnee.backend.exception.TweetTooLongException;
 import de.tobiasnee.backend.exception.UserNotFoundException;
 import de.tobiasnee.backend.repository.TweetRepository;
 import de.tobiasnee.backend.repository.UserRepository;
+import de.tobiasnee.backend.service.postprocessing.TweetCreatedService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 public class TweetService {
@@ -23,12 +26,15 @@ public class TweetService {
     private final TweetRepository tweetRepository;
     private final UserRepository userRepository;
     private final int maxTweetLength;
+    private final List<TweetCreatedService> tweetCreatedServices;
 
     public TweetService(TweetRepository tweetRepository,
                         UserRepository userRepository,
+                        List<TweetCreatedService> tweetCreatedServices,
                         @Value("${app.max-tweet-length}") int maxTweetLength) {
         this.tweetRepository = tweetRepository;
         this.userRepository = userRepository;
+        this.tweetCreatedServices = tweetCreatedServices;
         this.maxTweetLength = maxTweetLength;
     }
 
@@ -41,6 +47,7 @@ public class TweetService {
                         "Benutzer mit ID " + request.authorId() + " wurde nicht gefunden."));
 
         TweetEntity saved = tweetRepository.save(new TweetEntity(author, request.text()));
+        tweetCreatedServices.forEach(service -> service.handle(saved));
         return TweetResponse.from(saved);
     }
 
