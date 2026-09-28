@@ -4,10 +4,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-public record CreateTweetRequest(
+public record UpdateTweetRequest(
 
-        @NotNull(message = "Autor muss angegeben werden.")
-        Long authorId,
+        @NotNull(message = "Bearbeiter muss angegeben werden.")
+        Long editorId,
 
         @NotBlank(message = "Text darf nicht leer sein.")
         String text

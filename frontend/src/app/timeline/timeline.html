@@ -8,7 +8,7 @@
         <textarea
           rows="3"
           [formControl]="text"
-          [attr.maxlength]="maxLength"
+          [attr.maxlength]="maxLength()"
           placeholder="Share something …">
         </textarea>
 
@@ -23,30 +23,56 @@
           <p class="error">{{ message }}</p>
         }
       </div>
-    <h3 class="section-title">Timeline ({{ tweetCount() }})</h3>
 
-    @if (loading() && tweets().length === 0) {
-      <p class="empty">Loading tweets …</p>
-    } @else {
-      <ul class="tweet-list">
-        @for (tweet of tweets(); track tweet.id) {
-          <li class="tweet">
-            <div class="tweet-avatar">{{ tweet.author.displayName.charAt(0) }}</div>
-            <div class="tweet-body">
-              <div class="tweet-header">
-                <strong>{{ tweet.author.displayName }}</strong>
-                <span class="handle">&#64;{{ tweet.author.username }}</span>
-                <span class="tweet-date">· {{ tweet.createdAt | date: 'dd.MM.yyyy HH:mm' }}</span>
+      <h3 class="section-title">Timeline ({{ store.tweetCount() }})</h3>
+
+      @if (store.loading() && store.tweets().length === 0) {
+        <p class="empty">Loading tweets …</p>
+      } @else {
+        <ul class="tweet-list">
+          @for (tweet of store.tweets(); track tweet.id) {
+            <li class="tweet">
+              <div class="tweet-avatar">{{ tweet.author.displayName.charAt(0) }}</div>
+              <div class="tweet-body">
+                <div class="tweet-header">
+                  <strong>{{ tweet.author.displayName }}</strong>
+                  <span class="handle">&#64;{{ tweet.author.username }}</span>
+                  <span class="tweet-date">· {{ tweet.createdAt | date: 'dd.MM.yyyy HH:mm' }}</span>
+                </div>
+
+                @if (editingId() === tweet.id) {
+                  <textarea rows="2" [formControl]="editText" [attr.maxlength]="maxLength()"></textarea>
+                  <div class="tweet-actions">
+                    <button type="button" (click)="saveEdit(tweet.id)" [disabled]="editText.invalid">
+                      Save
+                    </button>
+                    <button type="button" (click)="cancelEdit()">Cancel</button>
+                  </div>
+                } @else {
+                  <p class="tweet-text">{{ tweet.text }}</p>
+                  <div class="tweet-footer">
+                    <button type="button" class="like-button" [class.liked]="tweet.likedByMe"
+                            (click)="toggleLike(tweet)"
+                            [attr.aria-label]="tweet.likedByMe ? 'Unlike' : 'Like'">
+                      {{ tweet.likedByMe ? '♥' : '♡' }} {{ tweet.likeCount }}
+                    </button>
+                    @if (tweet.author.id === me.id) {
+                      <div class="tweet-actions">
+                        <button type="button" (click)="startEdit(tweet)">Edit</button>
+                        <button type="button" class="danger" (click)="deleteTweet(tweet.id)">
+                          Delete
+                        </button>
+                      </div>
+                    }
+                  </div>
+                }
               </div>
-              <p class="tweet-text">{{ tweet.text }}</p>
-              <span class="tweet-likes">♥ {{ tweet.likeCount }}</span>
-            </div>
-          </li>
-        } @empty {
-          <li class="empty">No tweets yet. Be the first to post something!</li>
-        }
-      </ul>
-    }
+            </li>
+          } @empty {
+            <li class="empty">No tweets yet. Be the first to post something!</li>
+          }
+        </ul>
+      }
     </section>
 
     <aside class="profile-card">
@@ -58,4 +84,6 @@
     </aside>
 
   </div>
+} @else {
+  <p>No user selected. <a routerLink="/login">Choose a user</a> to continue.</p>
 }

@@ -2,13 +2,16 @@ package de.tobiasnee.backend.controller;
 
 import de.tobiasnee.backend.dto.CreateTweetRequest;
 import de.tobiasnee.backend.dto.TweetResponse;
+import de.tobiasnee.backend.dto.UpdateTweetRequest;
 import de.tobiasnee.backend.service.TweetService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/tweets")
@@ -29,5 +32,22 @@ public class TweetController {
     }
 
     @GetMapping
-    public List<TweetResponse> getAllTweets() { return tweetService.getAllTweets(); }
+    public Page<TweetResponse> getAllTweets(
+            @RequestParam(required = false) Long currentUserId,
+            @PageableDefault(size = 20) Pageable pageable) {
+        return tweetService.getAllTweets(currentUserId, pageable);
+    }
+
+    @PutMapping("/{id}")
+    public TweetResponse updateTweet(@PathVariable Long id,
+                                     @Valid @RequestBody UpdateTweetRequest request) {
+        return tweetService.updateTweet(id, request);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteTweet(@PathVariable Long id,
+                                            @RequestParam Long editorId) {
+        tweetService.deleteTweet(id, editorId);
+        return ResponseEntity.noContent().build();
+    }
 }

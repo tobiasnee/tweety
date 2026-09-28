@@ -2,66 +2,91 @@ package de.tobiasnee.backend.service;
 
 import de.tobiasnee.backend.dto.CreateTweetRequest;
 import de.tobiasnee.backend.dto.TweetResponse;
-import de.tobiasnee.backend.dto.UserResponse;
+import de.tobiasnee.backend.dto.UpdateTweetRequest;
 import de.tobiasnee.backend.entity.TweetEntity;
 import de.tobiasnee.backend.entity.UserEntity;
+import de.tobiasnee.backend.exception.NotTheAuthorException;
+import de.tobiasnee.backend.exception.TweetNotFoundException;
+import de.tobiasnee.backend.exception.TweetTooLongException;
 import de.tobiasnee.backend.exception.UserNotFoundException;
 import de.tobiasnee.backend.repository.TweetRepository;
 import de.tobiasnee.backend.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 public class TweetService {
 
     private final TweetRepository tweetRepository;
     private final UserRepository userRepository;
+    private final int maxTweetLength;
 
-    public TweetService(TweetRepository tweetRepository, UserRepository userRepository) {
+    public TweetService(TweetRepository tweetRepository,
+                        UserRepository userRepository,
+                        @Value("${app.max-tweet-length}") int maxTweetLength) {
         this.tweetRepository = tweetRepository;
         this.userRepository = userRepository;
+        this.maxTweetLength = maxTweetLength;
     }
 
     @Transactional
     public TweetResponse createTweet(CreateTweetRequest request) {
+        checkLength(request.text());
+
         UserEntity author = userRepository.findById(request.authorId())
                 .orElseThrow(() -> new UserNotFoundException(
                         "Benutzer mit ID " + request.authorId() + " wurde nicht gefunden."));
 
         TweetEntity saved = tweetRepository.save(new TweetEntity(author, request.text()));
-        return toResponse(saved);
+        return TweetResponse.from(saved);
     }
 
     @Transactional(readOnly = true)
-    public List<TweetResponse> getAllTweets() {
-        return tweetRepository.findAllByOrderByCreatedAtDesc().stream()
-                .map(this::toResponse)
-                .toList();
+    public Page<TweetResponse> getAllTweets(Long currentUserId, Pageable pageable) {
+        return tweetRepository.findTimeline(currentUserId, pageable).map(TweetResponse::from);
     }
 
     @Transactional(readOnly = true)
-    public List<TweetResponse> getTweetsByAuthorId(Long authorId) {
-        return tweetRepository.findAllByAuthorIdOrderByCreatedAtDesc(authorId).stream()
-                .map(this::toResponse)
-                .toList();
+    public Page<TweetResponse> getTweetsByAuthorId(Long authorId, Long currentUserId, Pageable pageable) {
+        return tweetRepository.findTimelineByAuthor(authorId, currentUserId, pageable).map(TweetResponse::from);
     }
 
-    private TweetResponse toResponse(TweetEntity tweet) {
-        UserEntity author = tweet.getAuthor();
-        return new TweetResponse(
-                tweet.getId(),
-                tweet.getText(),
-                new UserResponse(
-                        author.getId(),
-                        author.getUsername(),
-                        author.getEmail(),
-                        author.getDisplayName(),
-                        author.getCreatedAt()
-                ),
-                tweet.getCreatedAt(),
-                0
-        );
+    @Transactional
+    public TweetResponse updateTweet(Long tweetId, UpdateTweetRequest request) {
+        checkLength(request.text());
+
+        TweetEntity tweet = loadOwnTweet(tweetId, request.editorId());
+        tweet.changeText(request.text());
+        return TweetResponse.from(tweet);
+    }
+
+    @Transactional
+    public void deleteTweet(Long tweetId, Long editorId) {
+        TweetEntity tweet = loadOwnTweet(tweetId, editorId);
+        tweetRepository.delete(tweet);
+    }
+
+    private TweetEntity loadOwnTweet(Long tweetId, Long editorId) {
+        TweetEntity tweet = tweetRepository.findById(tweetId)
+                .orElseThrow(() -> new TweetNotFoundException(
+                        "Tweet mit ID " + tweetId + " wurde nicht gefunden."));
+
+        if (!tweet.getAuthor().getId().equals(editorId)) {
+            throw new NotTheAuthorException(
+                    "Tweet mit ID " + tweetId + " gehört nicht zu Benutzer " + editorId + ".");
+        }
+
+        return tweet;
+    }
+
+    private void checkLength(String text) {
+        if (text != null && text.length() > maxTweetLength) {
+            throw new TweetTooLongException(
+                    "Text darf höchstens " + maxTweetLength + " Zeichen lang sein (aktuell "
+                            + text.length() + ").");
+        }
     }
 }

@@ -6,18 +6,17 @@ import de.tobiasnee.backend.entity.UserEntity;
 import de.tobiasnee.backend.exception.DuplicateUserException;
 import de.tobiasnee.backend.exception.UserNotFoundException;
 import de.tobiasnee.backend.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
 
-    public UserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
 
     public UserResponse createUser(CreateUserRequest request) {
         if (userRepository.existsByUsername(request.username())) {
@@ -30,34 +29,23 @@ public class UserService {
                     "E-Mail '" + request.email() + "' ist bereits vergeben.");
         }
 
-        UserEntity saved = userRepository.save(toEntity(request));
-        return toResponse(saved);
+        UserEntity saved = userRepository.save(
+                new UserEntity(request.username(), request.email(), request.displayName()));
+
+        return UserResponse.from(saved);
     }
 
     public UserResponse getUserById(Long id) {
         UserEntity entity = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("Benutzer mit ID " + id + " wurde nicht gefunden."));
+                .orElseThrow(() -> new UserNotFoundException(
+                        "Benutzer mit ID " + id + " wurde nicht gefunden."));
 
-        return toResponse(entity);
+        return UserResponse.from(entity);
     }
 
     public List<UserResponse> getAllUsers() {
         return userRepository.findAll().stream()
-                .map(this::toResponse)
+                .map(UserResponse::from)
                 .toList();
-    }
-
-    private UserEntity toEntity(CreateUserRequest request) {
-        return new UserEntity(request.username(), request.email(), request.displayName());
-    }
-
-    private UserResponse toResponse(UserEntity entity) {
-        return new UserResponse(
-                entity.getId(),
-                entity.getUsername(),
-                entity.getEmail(),
-                entity.getDisplayName(),
-                entity.getCreatedAt()
-        );
     }
 }

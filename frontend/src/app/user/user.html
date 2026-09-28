@@ -15,8 +15,13 @@
         }
       </p>
     }
+
+    @if (fieldErrors()['username']; as serverError) {
+      <p class="error">{{ serverError }}</p>
+    }
   </div>
-    <div class="field">
+
+  <div class="field">
     <label for="email">E-Mail</label>
     <input id="email" type="email" formControlName="email" />
 
@@ -28,6 +33,10 @@
           E-Mail must be a valid email address.
         }
       </p>
+    }
+
+    @if (fieldErrors()['email']; as serverError) {
+      <p class="error">{{ serverError }}</p>
     }
   </div>
 
@@ -44,6 +53,10 @@
         }
       </p>
     }
+
+    @if (fieldErrors()['displayName']; as serverError) {
+      <p class="error">{{ serverError }}</p>
+    }
   </div>
 
   <button type="submit" [disabled]="saving()">
@@ -51,13 +64,14 @@
   </button>
 
   @if (createdUser(); as user) {
-  <p class="success">
-    User "{{ user.username }}" was created with ID {{ user.id }}.
-  </p>
-}
+    <p class="success">
+      User "{{ user.username }}" was created with ID {{ user.id }}.
+      <a [routerLink]="['/users', user.id]">Show profile</a>
+    </p>
+  }
 
-@if (errorMessage(); as message) {
-  <p class="error">{{ message }}</p>
-}
+  @if (errorMessage(); as message) {
+    <p class="error">{{ message }}</p>
+  }
 
 </form>

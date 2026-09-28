@@ -1,18 +1,27 @@
 package de.tobiasnee.backend.service;
 
 import de.tobiasnee.backend.dto.CreateTweetRequest;
+import de.tobiasnee.backend.dto.UpdateTweetRequest;
 import de.tobiasnee.backend.entity.TweetEntity;
 import de.tobiasnee.backend.entity.UserEntity;
+import de.tobiasnee.backend.exception.NotTheAuthorException;
+import de.tobiasnee.backend.exception.TweetNotFoundException;
+import de.tobiasnee.backend.exception.TweetTooLongException;
 import de.tobiasnee.backend.exception.UserNotFoundException;
 import de.tobiasnee.backend.repository.TweetRepository;
 import de.tobiasnee.backend.repository.UserRepository;
+import de.tobiasnee.backend.repository.projection.TweetListItem;
 import org.assertj.core.api.SoftAssertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,29 +33,38 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class TweetServiceTest {
 
+    private static final int MAX_TWEET_LENGTH = 20;
+
     @Mock
     private TweetRepository tweetRepository;
 
     @Mock
     private UserRepository userRepository;
 
-    @InjectMocks
     private TweetService tweetService;
 
-    private final UserEntity author = new UserEntity("Max", "max@mustermann.com", "Mustermann");
+    private final UserEntity author = authorWithId();
 
+    @BeforeEach
+    void setUp() {
+        tweetService = new TweetService(tweetRepository, userRepository, MAX_TWEET_LENGTH);
+    }
+
+    // ---------- createTweet ----------
 
     @Test
     void createTweetSavesTweet() {
         when(userRepository.findById(1L)).thenReturn(Optional.of(author));
         when(tweetRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        var response = tweetService.createTweet(new CreateTweetRequest(1L, "Mein erster Tweet"));
+        var response = tweetService.createTweet(new CreateTweetRequest(1L, "Kurzer Tweet"));
 
         SoftAssertions.assertSoftly(softly -> {
-            softly.assertThat(response.text()).isEqualTo("Mein erster Tweet");
+            softly.assertThat(response.text()).isEqualTo("Kurzer Tweet");
             softly.assertThat(response.author().username()).isEqualTo("Max");
             softly.assertThat(response.author().displayName()).isEqualTo("Mustermann");
+            softly.assertThat(response.likeCount()).isZero();
+            softly.assertThat(response.likedByMe()).isFalse();
         });
         verify(tweetRepository).save(any());
     }
@@ -61,14 +79,118 @@ class TweetServiceTest {
     }
 
     @Test
+    void createTweet_failsWhenTextTooLong() {
+        var tooLong = "x".repeat(MAX_TWEET_LENGTH + 1);
+
+        assertThatThrownBy(() -> tweetService.createTweet(new CreateTweetRequest(1L, tooLong)))
+                .isInstanceOf(TweetTooLongException.class);
+        verify(tweetRepository, never()).save(any());
+    }
+
+    @Test
+    void createTweet_acceptsTextAtMaxLength() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(author));
+        when(tweetRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        var exactly = "x".repeat(MAX_TWEET_LENGTH);
+
+        assertThat(tweetService.createTweet(new CreateTweetRequest(1L, exactly)).text())
+                .hasSize(MAX_TWEET_LENGTH);
+    }
+
+    // ---------- getAllTweets ----------
+
+    @Test
     void getAllTweets_returnsMappedTweets() {
-        when(tweetRepository.findAllByOrderByCreatedAtDesc()).thenReturn(List.of(
-                new TweetEntity(author, "Neuester Tweet"),
-                new TweetEntity(author, "Älterer Tweet")
-        ));
+        when(tweetRepository.findTimeline(any(), any())).thenReturn(new PageImpl<>(List.of(
+                new TweetListItem(2L, "Neuester Tweet", Instant.now(), 1L, "Max", "Mustermann", 0L, false),
+                new TweetListItem(1L, "Älterer Tweet", Instant.now(), 1L, "Max", "Mustermann", 3L, true)
+        )));
 
-        var result = tweetService.getAllTweets();
+        var result = tweetRepository.findTimeline(author.getId(), PageRequest.of(0, 10));
 
-        assertThat(result).extracting("text")
+        assertThat(result.getContent()).extracting("text")
                 .containsExactly("Neuester Tweet", "Älterer Tweet");
-    }}
+
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(result.getContent().get(1).likeCount()).isEqualTo(3L);
+            softly.assertThat(result.getContent().get(1).likedByMe()).isTrue();
+            softly.assertThat(result.getContent().get(0).likeCount()).isZero();
+            softly.assertThat(result.getContent().get(0).likedByMe()).isFalse();
+        });
+    }
+
+    // ---------- updateTweet ----------
+
+    @Test
+    void updateTweet_changesText() {
+        var tweet = tweetWithId(1L, author, "Alter Text");
+        when(tweetRepository.findById(1L)).thenReturn(Optional.of(tweet));
+
+        var response = tweetService.updateTweet(1L, new UpdateTweetRequest(1L, "Neuer Text"));
+
+        assertThat(response.text()).isEqualTo("Neuer Text");
+    }
+
+    @Test
+    void updateTweet_failsWhenTweetMissing() {
+        when(tweetRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> tweetService.updateTweet(99L, new UpdateTweetRequest(1L, "Neu")))
+                .isInstanceOf(TweetNotFoundException.class);
+    }
+
+    @Test
+    void updateTweet_failsWhenNotTheAuthor() {
+        var tweet = tweetWithId(1L, author, "Alter Text");
+        when(tweetRepository.findById(1L)).thenReturn(Optional.of(tweet));
+
+        assertThatThrownBy(() -> tweetService.updateTweet(1L, new UpdateTweetRequest(99L, "Neu")))
+                .isInstanceOf(NotTheAuthorException.class);
+        assertThat(tweet.getText()).isEqualTo("Alter Text");
+    }
+
+    @Test
+    void updateTweet_failsWhenTextTooLong() {
+        var tooLong = "x".repeat(MAX_TWEET_LENGTH + 1);
+
+        assertThatThrownBy(() -> tweetService.updateTweet(1L, new UpdateTweetRequest(1L, tooLong)))
+                .isInstanceOf(TweetTooLongException.class);
+    }
+
+    // ---------- deleteTweet ----------
+
+    @Test
+    void deleteTweet_removesTweet() {
+        var tweet = tweetWithId(1L, author, "Text");
+        when(tweetRepository.findById(1L)).thenReturn(Optional.of(tweet));
+
+        tweetService.deleteTweet(1L, 1L);
+
+        verify(tweetRepository).delete(tweet);
+    }
+
+    @Test
+    void deleteTweet_failsWhenNotTheAuthor() {
+        var tweet = tweetWithId(1L, author, "Text");
+        when(tweetRepository.findById(1L)).thenReturn(Optional.of(tweet));
+
+        assertThatThrownBy(() -> tweetService.deleteTweet(1L, 99L))
+                .isInstanceOf(NotTheAuthorException.class);
+        verify(tweetRepository, never()).delete(any());
+    }
+
+    // ---------- Hilfsmethoden ----------
+
+    private static UserEntity authorWithId() {
+        var user = new UserEntity("Max", "max@mustermann.com", "Mustermann");
+        ReflectionTestUtils.setField(user, "id", 1L);
+        return user;
+    }
+
+    private static TweetEntity tweetWithId(Long id, UserEntity author, String text) {
+        var tweet = new TweetEntity(author, text);
+        ReflectionTestUtils.setField(tweet, "id", id);
+        return tweet;
+    }
+}
