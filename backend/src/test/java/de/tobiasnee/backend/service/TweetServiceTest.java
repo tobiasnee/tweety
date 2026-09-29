@@ -11,6 +11,7 @@ import de.tobiasnee.backend.exception.UserNotFoundException;
 import de.tobiasnee.backend.repository.TweetRepository;
 import de.tobiasnee.backend.repository.UserRepository;
 import de.tobiasnee.backend.repository.projection.TweetListItem;
+import de.tobiasnee.backend.service.postprocessing.TweetCreatedService;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,16 +42,18 @@ class TweetServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private TweetCreatedService tweetCreatedService;
+
     private TweetService tweetService;
 
     private final UserEntity author = authorWithId();
 
     @BeforeEach
     void setUp() {
-        tweetService = new TweetService(tweetRepository, userRepository, MAX_TWEET_LENGTH);
+        tweetService = new TweetService(tweetRepository, userRepository, List.of(tweetCreatedService), MAX_TWEET_LENGTH, false);
     }
 
-    // ---------- createTweet ----------
 
     @Test
     void createTweetSavesTweet() {
@@ -98,8 +101,6 @@ class TweetServiceTest {
                 .hasSize(MAX_TWEET_LENGTH);
     }
 
-    // ---------- getAllTweets ----------
-
     @Test
     void getAllTweets_returnsMappedTweets() {
         when(tweetRepository.findTimeline(any(), any())).thenReturn(new PageImpl<>(List.of(
@@ -119,8 +120,6 @@ class TweetServiceTest {
             softly.assertThat(result.getContent().get(0).likedByMe()).isFalse();
         });
     }
-
-    // ---------- updateTweet ----------
 
     @Test
     void updateTweet_changesText() {
@@ -158,8 +157,6 @@ class TweetServiceTest {
                 .isInstanceOf(TweetTooLongException.class);
     }
 
-    // ---------- deleteTweet ----------
-
     @Test
     void deleteTweet_removesTweet() {
         var tweet = tweetWithId(1L, author, "Text");
@@ -180,7 +177,27 @@ class TweetServiceTest {
         verify(tweetRepository, never()).delete(any());
     }
 
-    // ---------- Hilfsmethoden ----------
+
+
+    @Test
+    void createTweet_runsPostProcessing() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(author));
+        when(tweetRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        tweetService.createTweet(new CreateTweetRequest(1L, "Kurzer Tweet"));
+
+        verify(tweetCreatedService).handle(any(TweetEntity.class));
+    }
+
+    @Test
+    void createTweet_skipsPostProcessingWhenAuthorMissing() {
+        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> tweetService.createTweet(new CreateTweetRequest(99L, "Hallo")))
+                .isInstanceOf(UserNotFoundException.class);
+
+        verify(tweetCreatedService, never()).handle(any());
+    }
 
     private static UserEntity authorWithId() {
         var user = new UserEntity("Max", "max@mustermann.com", "Mustermann");
