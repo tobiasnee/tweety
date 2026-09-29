@@ -8,6 +8,7 @@ import de.tobiasnee.backend.exception.NotTheAuthorException;
 import de.tobiasnee.backend.exception.TweetNotFoundException;
 import de.tobiasnee.backend.exception.TweetTooLongException;
 import de.tobiasnee.backend.exception.UserNotFoundException;
+import de.tobiasnee.backend.repository.LikeRepository;
 import de.tobiasnee.backend.repository.TweetRepository;
 import de.tobiasnee.backend.repository.UserRepository;
 import de.tobiasnee.backend.repository.projection.TweetListItem;
@@ -40,6 +41,9 @@ class TweetServiceTest {
     private TweetRepository tweetRepository;
 
     @Mock
+    private LikeRepository likeRepository;
+
+    @Mock
     private UserRepository userRepository;
 
     @Mock
@@ -51,7 +55,7 @@ class TweetServiceTest {
 
     @BeforeEach
     void setUp() {
-        tweetService = new TweetService(tweetRepository, userRepository, List.of(tweetCreatedService), MAX_TWEET_LENGTH, false);
+        tweetService = new TweetService(tweetRepository, userRepository, likeRepository, List.of(tweetCreatedService), MAX_TWEET_LENGTH, false);
     }
 
 
@@ -158,12 +162,13 @@ class TweetServiceTest {
     }
 
     @Test
-    void deleteTweet_removesTweet() {
+    void deleteTweet_removesLikesAndTweet() {
         var tweet = tweetWithId(1L, author, "Text");
         when(tweetRepository.findById(1L)).thenReturn(Optional.of(tweet));
 
         tweetService.deleteTweet(1L, 1L);
 
+        verify(likeRepository).deleteAllByTweetId(1L);
         verify(tweetRepository).delete(tweet);
     }
 
@@ -176,8 +181,6 @@ class TweetServiceTest {
                 .isInstanceOf(NotTheAuthorException.class);
         verify(tweetRepository, never()).delete(any());
     }
-
-
 
     @Test
     void createTweet_runsPostProcessing() {

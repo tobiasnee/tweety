@@ -12,4 +12,6 @@ public interface LikeRepository extends JpaRepository<LikeEntity, Long> {
     Optional<LikeEntity> findByTweetIdAndUserId(Long tweetId, Long userId);
 
     long countByTweetId(Long tweetId);
+
+    void deleteAllByTweetId(Long tweetId);
 }

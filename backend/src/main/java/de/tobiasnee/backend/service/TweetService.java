@@ -9,6 +9,7 @@ import de.tobiasnee.backend.exception.NotTheAuthorException;
 import de.tobiasnee.backend.exception.TweetNotFoundException;
 import de.tobiasnee.backend.exception.TweetTooLongException;
 import de.tobiasnee.backend.exception.UserNotFoundException;
+import de.tobiasnee.backend.repository.LikeRepository;
 import de.tobiasnee.backend.repository.TweetRepository;
 import de.tobiasnee.backend.repository.UserRepository;
 import de.tobiasnee.backend.service.postprocessing.TweetCreatedService;
@@ -25,17 +26,20 @@ public class TweetService {
 
     private final TweetRepository tweetRepository;
     private final UserRepository userRepository;
+    private final LikeRepository likeRepository;
     private final List<TweetCreatedService> tweetCreatedServices;
     private final int maxTweetLength;
     private final boolean simulateFailure;
 
     public TweetService(TweetRepository tweetRepository,
                         UserRepository userRepository,
+                        LikeRepository likeRepository,
                         List<TweetCreatedService> tweetCreatedServices,
                         @Value("${app.max-tweet-length}") int maxTweetLength,
                         @Value("${app.simulate-failure-after-tweet:false}") boolean simulateFailure) {
         this.tweetRepository = tweetRepository;
         this.userRepository = userRepository;
+        this.likeRepository = likeRepository;
         this.tweetCreatedServices = tweetCreatedServices;
         this.maxTweetLength = maxTweetLength;
         this.simulateFailure = simulateFailure;
@@ -82,6 +86,7 @@ public class TweetService {
     @Transactional
     public void deleteTweet(Long tweetId, Long editorId) {
         TweetEntity tweet = loadOwnTweet(tweetId, editorId);
+        likeRepository.deleteAllByTweetId(tweetId);
         tweetRepository.delete(tweet);
     }
 
