@@ -5,6 +5,7 @@ import de.tobiasnee.backend.dto.TweetResponse;
 import de.tobiasnee.backend.dto.UpdateTweetRequest;
 import de.tobiasnee.backend.entity.TweetEntity;
 import de.tobiasnee.backend.entity.UserEntity;
+import de.tobiasnee.backend.event.TweetCreatedEvent;
 import de.tobiasnee.backend.exception.NotTheAuthorException;
 import de.tobiasnee.backend.exception.TweetNotFoundException;
 import de.tobiasnee.backend.exception.TweetTooLongException;
@@ -12,8 +13,8 @@ import de.tobiasnee.backend.exception.UserNotFoundException;
 import de.tobiasnee.backend.repository.LikeRepository;
 import de.tobiasnee.backend.repository.TweetRepository;
 import de.tobiasnee.backend.repository.UserRepository;
-import de.tobiasnee.backend.service.postprocessing.TweetCreatedService;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -27,20 +28,20 @@ public class TweetService {
     private final TweetRepository tweetRepository;
     private final UserRepository userRepository;
     private final LikeRepository likeRepository;
-    private final List<TweetCreatedService> tweetCreatedServices;
+    private final ApplicationEventPublisher publisher;
     private final int maxTweetLength;
     private final boolean simulateFailure;
 
     public TweetService(TweetRepository tweetRepository,
                         UserRepository userRepository,
                         LikeRepository likeRepository,
-                        List<TweetCreatedService> tweetCreatedServices,
+                        ApplicationEventPublisher publisher,
                         @Value("${app.max-tweet-length}") int maxTweetLength,
                         @Value("${app.simulate-failure-after-tweet:false}") boolean simulateFailure) {
         this.tweetRepository = tweetRepository;
         this.userRepository = userRepository;
         this.likeRepository = likeRepository;
-        this.tweetCreatedServices = tweetCreatedServices;
+        this.publisher = publisher;
         this.maxTweetLength = maxTweetLength;
         this.simulateFailure = simulateFailure;
     }
@@ -54,7 +55,8 @@ public class TweetService {
                         "Benutzer mit ID " + request.authorId() + " wurde nicht gefunden."));
 
         TweetEntity saved = tweetRepository.save(new TweetEntity(author, request.text()));
-        tweetCreatedServices.forEach(service -> service.handle(saved));
+
+        publisher.publishEvent(new TweetCreatedEvent(saved.getId(), author.getId()));
 
         if (simulateFailure) {
             throw new IllegalStateException(

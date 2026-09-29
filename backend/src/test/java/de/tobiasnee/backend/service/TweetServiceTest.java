@@ -4,6 +4,7 @@ import de.tobiasnee.backend.dto.CreateTweetRequest;
 import de.tobiasnee.backend.dto.UpdateTweetRequest;
 import de.tobiasnee.backend.entity.TweetEntity;
 import de.tobiasnee.backend.entity.UserEntity;
+import de.tobiasnee.backend.event.TweetCreatedEvent;
 import de.tobiasnee.backend.exception.NotTheAuthorException;
 import de.tobiasnee.backend.exception.TweetNotFoundException;
 import de.tobiasnee.backend.exception.TweetTooLongException;
@@ -12,13 +13,13 @@ import de.tobiasnee.backend.repository.LikeRepository;
 import de.tobiasnee.backend.repository.TweetRepository;
 import de.tobiasnee.backend.repository.UserRepository;
 import de.tobiasnee.backend.repository.projection.TweetListItem;
-import de.tobiasnee.backend.service.postprocessing.TweetCreatedService;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -47,7 +48,7 @@ class TweetServiceTest {
     private UserRepository userRepository;
 
     @Mock
-    private TweetCreatedService tweetCreatedService;
+    private ApplicationEventPublisher publisher;
 
     private TweetService tweetService;
 
@@ -55,7 +56,8 @@ class TweetServiceTest {
 
     @BeforeEach
     void setUp() {
-        tweetService = new TweetService(tweetRepository, userRepository, likeRepository, List.of(tweetCreatedService), MAX_TWEET_LENGTH, false);
+        tweetService = new TweetService(tweetRepository, userRepository, likeRepository,
+                publisher, MAX_TWEET_LENGTH, false);
     }
 
 
@@ -183,23 +185,23 @@ class TweetServiceTest {
     }
 
     @Test
-    void createTweet_runsPostProcessing() {
+    void createTweet_publishesEvent() {
         when(userRepository.findById(1L)).thenReturn(Optional.of(author));
         when(tweetRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         tweetService.createTweet(new CreateTweetRequest(1L, "Kurzer Tweet"));
 
-        verify(tweetCreatedService).handle(any(TweetEntity.class));
+        verify(publisher).publishEvent(any(TweetCreatedEvent.class));
     }
 
     @Test
-    void createTweet_skipsPostProcessingWhenAuthorMissing() {
+    void createTweet_publishesNoEventWhenAuthorMissing() {
         when(userRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> tweetService.createTweet(new CreateTweetRequest(99L, "Hallo")))
                 .isInstanceOf(UserNotFoundException.class);
 
-        verify(tweetCreatedService, never()).handle(any());
+        verify(publisher, never()).publishEvent(any(TweetCreatedEvent.class));
     }
 
     private static UserEntity authorWithId() {
