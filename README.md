@@ -2,10 +2,9 @@
 
 Mini-Twitter als Lernprojekt: **Spring Boot 4** (Backend) und **Angular 22** (Frontend).
 
-Das Projekt entstand entlang eines Lernbacklogs mit 18 Stories. Ziel war nicht ein
+Das Projekt entstand entlang eines Lernprojektes. Ziel war nicht ein
 produktionsreifes Twitter, sondern das schrittweise Erarbeiten der wichtigsten
-Konzepte beider Frameworks. Lernvereinfachungen sind unter
-[Bekannte Einschränkungen](#bekannte-einschränkungen) dokumentiert.
+Konzepte beider Frameworks.
 
 ---
 
@@ -14,11 +13,6 @@ Konzepte beider Frameworks. Lernvereinfachungen sind unter
 - [Schnellstart](#schnellstart)
 - [Architektur](#architektur)
 - [API-Überblick](#api-überblick)
-- [Demo-Szenario](#demo-szenario)
-- [Lernkonzepte pro Story](#lernkonzepte-pro-story)
-- [Bekannte Einschränkungen](#bekannte-einschränkungen)
-- [Technische Schulden](#technische-schulden)
-- [Offene Themen](#offene-themen)
 
 ---
 
